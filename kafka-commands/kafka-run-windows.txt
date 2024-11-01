@@ -1,0 +1,42 @@
+Run in different terminals
+
+Terminal1
+C:\kafka>.\bin\windows\zookeeper-server-start.bat .\config\zookeeper.properties
+
+Terminal2
+c:\kafka>.\bin\windows\kafka-server-start.bat .\config\server.properties
+
+
+Terminal3
+#Create topic 
+c:\kafka\bin\windows>kafka-topics.bat --create --zookeeper localhost:2181 --replication-factor 1 --partitions 1 --topic test
+Created topic test.
+
+#List topics
+c:\kafka>.\bin\windows\kafka-topics.bat --list --zookeeper localhost:2181
+
+c:\kafka\bin\windows>kafka-topics.bat --describe --zookeeper localhost:2181 --topic test
+Topic: test     TopicId: RcEjNcyFQC6bdrDlBwcFWQ PartitionCount: 1       ReplicationFactor: 1    Configs:
+        Topic: test     Partition: 0    Leader: 0       Replicas: 0     Isr: 0
+
+
+Terminal4
+C:\kafka\bin\windows>kafka-console-producer.bat --broker-list localhost:9092 --topic test
+>Hello world
+>Yahoo
+>Message 3
+
+Terminal5
+C:\kafka\bin\windows>kafka-console-consumer.bat --bootstrap-server localhost:9092 --topic test --from-beginning
+Hello world
+Yahoo
+Message 3
+
+Code:
+https://thepracticaldeveloper.com/spring-boot-kafka-config/
+
+
+Another links:
+https://www.loginradius.com/blog/engineering/quick-kafka-installation/
+https://habr.com/ru/companies/piter/articles/352978/
+https://habr.com/ru/articles/440400/

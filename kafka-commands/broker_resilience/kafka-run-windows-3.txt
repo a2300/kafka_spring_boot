@@ -1,0 +1,62 @@
+# Resilience on broker side
+# Create topic with replication factor 3 and 1 partition
+
+#Terminal 1
+c:\kafka>bin\windows\zookeeper-server-start.bat .\config\zookeeper.properties
+
+#Terminal 2
+c:\kafka>bin\windows\kafka-server-start.bat .\config\server-0.properties
+
+#Terminal 3
+c:\kafka>bin\windows\kafka-server-start.bat .\config\server-1.properties
+
+#Terminal 4
+c:\kafka>bin\windows\kafka-server-start.bat .\config\server-2.properties
+
+#Terminal 5
+c:\kafka>bin\windows\kafka-topics.bat --create --zookeeper localhost:2181 --replication-factor 3 --partitions 1 --topic replicated_topic
+WARNING: Due to limitations in metric names, topics with a period ('.') or underscore ('_') could collide. To avoid issues it is best to use either, but not both.
+Created topic replicated_topic
+
+//Here see that replicas are in sync, e.g. replication factor 3, (Replicas: 0,1,2 Isr: 0,1,2)
+c:\kafka>.\bin\windows\kafka-topics.bat --describe --topic replicated_topic --zookeeper localhost:2181
+Topic: replicated_topic TopicId: FRlvCrUiTyiGE2x48viBgA PartitionCount: 1       ReplicationFactor: 3    Configs:
+        Topic: replicated_topic Partition: 0    Leader: 0       Replicas: 0,1,2 Isr: 0,1,2
+
+#Terminal 6
+//Create producer and send some messages to topic
+c:\kafka>bin\windows\kafka-console-producer.bat --broker-list localhost:9092 --topic replicated_topic
+>message 1
+>message 2
+>message 3
+
+#Terminal 7
+//Create consumer and receive some messages from topic
+c:\kafka>bin\windows\kafka-console-consumer.bat --bootstrap-server localhost:9092 --topic replicated_topic --from-beginning
+message 1
+message 2
+message 3
+
+
+//-----
+//Kill leader server (Leader: 0), in terminal 2
+
+//Describe topic now
+//Leader has changed to 1, replicas are not in sync (Replicas: 0,1,2 Isr: 1,2)
+c:\kafka>.\bin\windows\kafka-topics.bat --describe --topic replicated_topic --zookeeper localhost:2181
+Topic: replicated_topic TopicId: FRlvCrUiTyiGE2x48viBgA PartitionCount: 1       ReplicationFactor: 3    Configs:
+        Topic: replicated_topic Partition: 0    Leader: 1       Replicas: 0,1,2 Isr: 1,2
+
+//in terminal 2, run broker
+c:\kafka>bin\windows\kafka-server-start.bat .\config\server-0.properties
+
+//Describe topic now
+//Quorum are in sync (Replicas: 0,1,2 Isr: 1,2,0)
+c:\kafka>.\bin\windows\kafka-topics.bat --describe --topic replicated_topic --zookeeper localhost:2181
+Topic: replicated_topic TopicId: FRlvCrUiTyiGE2x48viBgA PartitionCount: 1       ReplicationFactor: 3    Configs:
+        Topic: replicated_topic Partition: 0    Leader: 1       Replicas: 0,1,2 Isr: 1,2,0
+
+
+
+
+
